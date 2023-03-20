@@ -1,0 +1,15 @@
+.buttonsContainer {
+    display: flex;
+    gap: 30px;
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+
+    button {
+        position: relative;
+        bottom: unset;
+        left: unset;
+        transform: unset;
+    }
+}
