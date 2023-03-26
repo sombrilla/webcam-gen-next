@@ -11,21 +11,11 @@ export default function Home() {
   async function getGeneratedImage() {
     if (generating) return;
 
-    const data = {
-      init_images: [screenshot],
-      denoising_strength: 0.3,
-      cfg_scale: 6,
-      prompt: "lvngvncnt, highly detailed",
-      steps: 25,
-      width: 640,
-      height: 480,
-    };
-
     setGenerating(true);
 
     const response = await fetch("/api/img2img", {
       method: "post",
-      body: JSON.stringify(data),
+      body: JSON.stringify(screenshot),
     }).then((data) => data.json());
 
     setGenerating(false);
@@ -72,7 +62,10 @@ export default function Home() {
         {generated && (
           <>
             <img src={`data:image/png;base64,${generated}`} alt="generated" />
-            <button onClick={clearAll}>Clear</button>
+            <div className={styles.buttonsContainer}>
+              <button onClick={getGeneratedImage} disabled={generating}>Retry</button>
+              <button onClick={clearAll} disabled={generating}>Clear</button>
+            </div>
           </>
         )}
       </main>
