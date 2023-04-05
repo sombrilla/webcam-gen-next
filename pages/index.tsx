@@ -1,12 +1,37 @@
 import Head from "next/head";
 import styles from "@/styles/Home.module.scss";
 import { WebCam } from "@/components/WebCam";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+
+const FLASH_DURATION = 300;
 
 export default function Home() {
+  const flashRef = useRef<HTMLDivElement>(null);
+
   const [screenshot, setScreenshot] = useState<string>();
   const [generated, setGenerated] = useState<string>();
   const [generating, setGenerating] = useState<boolean>(false);
+
+  async function triggerFlash() {
+    return new Promise((resolve) => {
+      flashRef.current?.classList.add("flash");
+
+      setTimeout(() => {
+        flashRef.current?.classList.remove("flash");
+
+        setTimeout(() => {
+          resolve(null);
+        }, FLASH_DURATION);
+      }, FLASH_DURATION);
+    });
+  }
+
+  useEffect(() => {
+    if (screenshot) {
+      triggerFlash();
+    }
+  }, [screenshot]);
 
   async function getGeneratedImage() {
     if (generating) return;
@@ -43,35 +68,59 @@ export default function Home() {
       </Head>
 
       <main>
-        {!screenshot && !generated && <WebCam onScreenshot={setScreenshot} />}
+        {generated && screenshot && (
+          <div className="preview">
+            <h2>Original</h2>
 
-        {screenshot && !generated && (
-          <>
-            <img src={screenshot} alt="screenshot" />
-            <div className={styles.buttonsContainer}>
-              <button onClick={clearScreenShot} disabled={generating}>
-                Retake
-              </button>
-              <button onClick={getGeneratedImage} disabled={generating}>
-                Generate
-              </button>
-            </div>
-          </>
+            <motion.img
+              layoutId={screenshot}
+              src={screenshot}
+              alt="screenshot"
+            />
+          </div>
         )}
 
-        {generated && (
-          <>
-            <img src={`data:image/png;base64,${generated}`} alt="generated" />
-            <div className={styles.buttonsContainer}>
-              <button onClick={clearAll} disabled={generating}>
-                Clear
-              </button>
-              <button onClick={getGeneratedImage} disabled={generating}>
-                Retry
-              </button>
-            </div>
-          </>
-        )}
+        <div className="content">
+          <div ref={flashRef} className="flashWrapper" />
+
+          {!screenshot && !generated && <WebCam onScreenshot={setScreenshot} />}
+
+          {screenshot && !generated && (
+            <>
+              <motion.img
+                layoutId={screenshot}
+                src={screenshot}
+                alt="screenshot"
+              />
+
+              <div className={styles.buttonsContainer}>
+                <button onClick={clearScreenShot} disabled={generating}>
+                  Retake
+                </button>
+
+                <button onClick={getGeneratedImage} disabled={generating}>
+                  Generate
+                </button>
+              </div>
+            </>
+          )}
+
+          {generated && (
+            <>
+              <img src={`data:image/png;base64,${generated}`} alt="generated" />
+
+              <div className={styles.buttonsContainer}>
+                <button onClick={clearAll} disabled={generating}>
+                  Clear
+                </button>
+
+                <button onClick={getGeneratedImage} disabled={generating}>
+                  Retry
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </main>
     </>
   );
