@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface WebCamProps {
   onScreenshot: (image: string) => void;
@@ -7,8 +7,9 @@ interface WebCamProps {
 export function WebCam({ onScreenshot }: WebCamProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  function takeScreenshot() {
+  async function takeScreenshot() {
     if (!videoRef.current) return;
+
     const canvas = document.createElement("canvas");
     canvas.width = 640;
     canvas.height = 480;
@@ -39,14 +40,15 @@ export function WebCam({ onScreenshot }: WebCamProps) {
   }, []);
 
   return (
-    <div className="webCam">
+    <>
       <video
         autoPlay
+        playsInline
         ref={videoRef}
-        style={{ width: "100%", transform: "scaleX(-1)" }}
+        style={{ transform: "scaleX(-1)" }}
       />
 
       <button onClick={takeScreenshot}>Take screenshot</button>
-    </div>
+    </>
   );
 }

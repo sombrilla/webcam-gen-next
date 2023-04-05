@@ -63,8 +63,12 @@ export default function Home() {
           <>
             <img src={`data:image/png;base64,${generated}`} alt="generated" />
             <div className={styles.buttonsContainer}>
-              <button onClick={getGeneratedImage} disabled={generating}>Retry</button>
-              <button onClick={clearAll} disabled={generating}>Clear</button>
+              <button onClick={clearAll} disabled={generating}>
+                Clear
+              </button>
+              <button onClick={getGeneratedImage} disabled={generating}>
+                Retry
+              </button>
             </div>
           </>
         )}
