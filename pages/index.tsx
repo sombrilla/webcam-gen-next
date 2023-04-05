@@ -3,6 +3,7 @@ import styles from "@/styles/Home.module.scss";
 import { WebCam } from "@/components/WebCam";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Spinner } from "@/components/Spinner/Spinner";
 
 const FLASH_DURATION = 300;
 
@@ -81,6 +82,13 @@ export default function Home() {
         )}
 
         <div className="content">
+          {generating && (
+            <>
+              <div className="loadingOverlay" />
+              <Spinner />
+            </>
+          )}
+
           <div ref={flashRef} className="flashWrapper" />
 
           {!screenshot && !generated && <WebCam onScreenshot={setScreenshot} />}

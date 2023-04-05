@@ -26,6 +26,12 @@ body {
   }
 }
 
+.loadingOverlay {
+  background: black;
+  opacity: 0.5;
+  position: absolute;
+}
+
 .content {
   display: flex;
   justify-content: center;
@@ -34,7 +40,8 @@ body {
 
   video,
   img,
-  .flashWrapper {
+  .flashWrapper,
+  .loadingOverlay {
     height: 512px;
     width: 512px;
     object-fit: cover;
