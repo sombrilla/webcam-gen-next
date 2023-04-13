@@ -1,53 +1,28 @@
 import Head from "next/head";
-import styles from "@/styles/Home.module.scss";
-import { WebCam } from "@/components/WebCam";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { WebCam } from "@/components/WebCam/WebCam";
 import { Spinner } from "@/components/Spinner/Spinner";
-import { Controls } from "@/components/Controls/Controls";
 
-const FLASH_DURATION = 300;
-const defaultDenoise = 1;
-const defaultCfgScale = 9;
-const defaultControlNetWeight = 1;
+import styles from "@/styles/Home.module.scss";
+import { Flash } from "@/components/Flash/Flash";
+
+const denoise = 1;
+const cfgScale = 9;
+const controlNetWeight = 1;
 
 export default function Home() {
-  const flashRef = useRef<HTMLDivElement>(null);
-
-  const [denoise, setDenoise] = useState<number>(defaultDenoise);
-  const [cfgScale, setCfgScale] = useState<number>(defaultCfgScale);
-  const [controlNetWeight, setControlNetWeight] = useState<number>(
-    defaultControlNetWeight
-  );
-
   const [screenshot, setScreenshot] = useState<string>();
   const [generated, setGenerated] = useState<string>();
-  const [generating, setGenerating] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  async function triggerFlash() {
-    return new Promise((resolve) => {
-      flashRef.current?.classList.add("flash");
-
-      setTimeout(() => {
-        flashRef.current?.classList.remove("flash");
-
-        setTimeout(() => {
-          resolve(null);
-        }, FLASH_DURATION);
-      }, FLASH_DURATION);
-    });
-  }
-
-  useEffect(() => {
-    if (screenshot) {
-      triggerFlash();
-    }
-  }, [screenshot]);
+  const webCamHandleRef = useRef<{ takeScreenshot: Function }>(null);
+  const flashHandleRef = useRef<{ triggerFlash: Function }>(null);
 
   async function getGeneratedImage() {
-    if (generating) return;
+    if (isLoading) return;
 
-    setGenerating(true);
+    setIsLoading(true);
 
     const data = {
       image: screenshot,
@@ -65,21 +40,26 @@ export default function Home() {
       setGenerated(response);
     } catch (error) {
       // TODO: Handle error
-      console.log("oops, there was an error please try again");
+      console.log("There was an error please try again");
       console.log(error);
     } finally {
-      setGenerating(false);
+      setIsLoading(false);
     }
   }
 
-  function clearScreenShot() {
-    if (generating) return;
+  function takeScreenshot() {
+    flashHandleRef.current?.triggerFlash();
+    webCamHandleRef.current?.takeScreenshot();
+  }
+
+  function clearScreenshot() {
+    if (isLoading) return;
     setScreenshot(undefined);
   }
 
   function clearAll() {
-    if (generating) return;
-    clearScreenShot();
+    if (isLoading) return;
+    clearScreenshot();
     setGenerated(undefined);
   }
 
@@ -92,79 +72,70 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <Controls
-          current={{ denoise, cfgScale, controlNetWeight }}
-          defaults={{
-            denoise: defaultDenoise,
-            cfgScale: defaultCfgScale,
-            controlNetWeight: defaultControlNetWeight,
-          }}
-          onControlChange={{
-            denoise: setDenoise,
-            cfgScale: setCfgScale,
-            controlNetWeight: setControlNetWeight,
-          }}
-        />
-
+      <main className={styles.home}>
         {generated && screenshot && (
           <motion.img
             layoutId={screenshot}
             src={screenshot}
             alt="screenshot"
-            className="preview"
+            className={styles.preview}
           />
         )}
 
-        <div className="content">
-          {generating && (
-            <>
-              <div className="loadingOverlay" />
-              <Spinner />
-            </>
+        <div className={styles.buttonsContainer}>
+          {!generated && !screenshot && (
+            <button onClick={takeScreenshot}>Take screenshot</button>
           )}
 
-          <div ref={flashRef} className="flashWrapper" />
-
-          {!screenshot && !generated && <WebCam onScreenshot={setScreenshot} />}
-
-          {screenshot && !generated && (
+          {!generated && screenshot && (
             <>
-              <motion.img
-                layoutId={screenshot}
-                src={screenshot}
-                alt="screenshot"
-              />
+              <button onClick={clearScreenshot} disabled={isLoading}>
+                Retake
+              </button>
 
-              <div className={styles.buttonsContainer}>
-                <button onClick={clearScreenShot} disabled={generating}>
-                  Retake
-                </button>
-
-                <button onClick={getGeneratedImage} disabled={generating}>
-                  Generate
-                </button>
-              </div>
+              <button onClick={getGeneratedImage} disabled={isLoading}>
+                Generate
+              </button>
             </>
           )}
 
           {generated && (
             <>
-              <img
-                src={`data:image/webp;base64,${generated}`}
-                alt="generated"
-              />
+              <button onClick={clearAll} disabled={isLoading}>
+                Take another screenshot
+              </button>
 
-              <div className={styles.buttonsContainer}>
-                <button onClick={clearAll} disabled={generating}>
-                  Take another screenshot
-                </button>
-
-                <button onClick={getGeneratedImage} disabled={generating}>
-                  Retry with same image
-                </button>
-              </div>
+              <button onClick={getGeneratedImage} disabled={isLoading}>
+                Retry with same image
+              </button>
             </>
+          )}
+        </div>
+
+        <div className={styles.content}>
+          {isLoading && <Spinner />}
+
+          <Flash ref={flashHandleRef} />
+
+          {!generated && !screenshot && (
+            <WebCam ref={webCamHandleRef} onScreenshot={setScreenshot} />
+          )}
+
+          {!generated && screenshot && (
+            <motion.img
+              layoutId={screenshot}
+              src={screenshot}
+              alt="screenshot"
+              className={styles.screenshot}
+            />
+          )}
+
+          {generated && (
+            <img
+              className={styles.generated}
+              src={`data:image/webp;base64,${generated}`}
+              alt="generated"
+            />
           )}
         </div>
       </main>
