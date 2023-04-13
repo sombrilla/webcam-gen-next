@@ -45,14 +45,9 @@ export default function Home() {
     webCamHandleRef.current?.takeScreenshot();
   }
 
-  function clearScreenshot() {
-    if (isLoading) return;
-    setScreenshot(undefined);
-  }
-
   function clearAll() {
     if (isLoading) return;
-    clearScreenshot();
+    setScreenshot(undefined);
     setGenerated(undefined);
   }
 
@@ -63,7 +58,7 @@ export default function Home() {
       case Status.ScreenshotPreview:
         return (
           <>
-            <button onClick={clearScreenshot} disabled={isLoading}>
+            <button onClick={clearAll} disabled={isLoading}>
               Retake
             </button>
 

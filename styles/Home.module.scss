@@ -12,14 +12,14 @@
   top: 40px;
   z-index: 2;
   pointer-events: all;
-  width: 25%;
+  width: 15%;
   aspect-ratio: 1/1;
   object-fit: cover;
   transition: width 0.2s ease-in-out;
   border-radius: 10px;
 
   &:hover {
-    width: 45%;
+    width: 25%;
   }
 }
 
