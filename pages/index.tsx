@@ -4,11 +4,21 @@ import { WebCam } from "@/components/WebCam";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Spinner } from "@/components/Spinner/Spinner";
+import { Controls } from "@/components/Controls/Controls";
 
 const FLASH_DURATION = 300;
+const defaultDenoise = 1;
+const defaultCfgScale = 9;
+const defaultControlNetWeight = 1;
 
 export default function Home() {
   const flashRef = useRef<HTMLDivElement>(null);
+
+  const [denoise, setDenoise] = useState<number>(defaultDenoise);
+  const [cfgScale, setCfgScale] = useState<number>(defaultCfgScale);
+  const [controlNetWeight, setControlNetWeight] = useState<number>(
+    defaultControlNetWeight
+  );
 
   const [screenshot, setScreenshot] = useState<string>();
   const [generated, setGenerated] = useState<string>();
@@ -39,13 +49,27 @@ export default function Home() {
 
     setGenerating(true);
 
-    const response = await fetch("/api/img2img", {
-      method: "post",
-      body: JSON.stringify(screenshot),
-    }).then((data) => data.json());
+    const data = {
+      image: screenshot,
+      denoise,
+      cfgScale,
+      controlNetWeight,
+    };
 
-    setGenerating(false);
-    setGenerated(response.data.images[0]);
+    try {
+      const response = await fetch("/api/img2img", {
+        method: "post",
+        body: JSON.stringify(data),
+      }).then((data) => data.json());
+
+      setGenerated(response);
+    } catch (error) {
+      // TODO: Handle error
+      console.log("oops, there was an error please try again");
+      console.log(error);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function clearScreenShot() {
@@ -69,16 +93,27 @@ export default function Home() {
       </Head>
 
       <main>
-        {generated && screenshot && (
-          <div className="preview">
-            <h2>Original</h2>
+        <Controls
+          current={{ denoise, cfgScale, controlNetWeight }}
+          defaults={{
+            denoise: defaultDenoise,
+            cfgScale: defaultCfgScale,
+            controlNetWeight: defaultControlNetWeight,
+          }}
+          onControlChange={{
+            denoise: setDenoise,
+            cfgScale: setCfgScale,
+            controlNetWeight: setControlNetWeight,
+          }}
+        />
 
-            <motion.img
-              layoutId={screenshot}
-              src={screenshot}
-              alt="screenshot"
-            />
-          </div>
+        {generated && screenshot && (
+          <motion.img
+            layoutId={screenshot}
+            src={screenshot}
+            alt="screenshot"
+            className="preview"
+          />
         )}
 
         <div className="content">
@@ -115,15 +150,18 @@ export default function Home() {
 
           {generated && (
             <>
-              <img src={`data:image/png;base64,${generated}`} alt="generated" />
+              <img
+                src={`data:image/webp;base64,${generated}`}
+                alt="generated"
+              />
 
               <div className={styles.buttonsContainer}>
                 <button onClick={clearAll} disabled={generating}>
-                  Clear
+                  Take another screenshot
                 </button>
 
                 <button onClick={getGeneratedImage} disabled={generating}>
-                  Retry
+                  Retry with same image
                 </button>
               </div>
             </>

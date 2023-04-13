@@ -1,0 +1,46 @@
+.controls {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 200px;
+  justify-content: center;
+  align-items: center;
+  gap: 10%;
+  padding: 0 20px;
+  text-align: center;
+  padding-top: 10px;
+
+  h3,
+  p {
+    margin: 0;
+    padding: 0;
+  }
+
+  p {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  input {
+    pointer-events: all;
+    margin-bottom: 15px;
+  }
+
+  & > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  span {
+    pointer-events: all;
+    align-self: center;
+    padding: 3px 15px;
+    background: #434343;
+    border: 1px solid grey;
+  }
+}
