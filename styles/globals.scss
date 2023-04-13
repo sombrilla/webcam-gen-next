@@ -1,36 +1,7 @@
 body {
-    margin: 0;
-    background: black;
-    overflow: hidden;
-}
-
-video, img {
-    height: 100vh;
-   width: 100%;
-    object-fit: contain;
-}
-
-img {
-    transform: scaleX(-1);
-}
-
-button {
-    position: absolute;
-    bottom: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 15px 20px;
-    background: black;
-    color: white;
-    border: none;
-    border-radius: 3px;
-
-    &:not(:disabled):hover {
-    cursor: pointer;
-        background: #444444;
-     }
-
-    &:disabled {
-        opacity: 0.5;
-    }
+  margin: 0;
+  background: black;
+  color: white;
+  overflow: hidden;
+  font-family: sans-serif;
 }

@@ -1,37 +1,118 @@
 import Head from "next/head";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+
+import { generateImage } from "@/utils/generateImage";
+import { retryPromise } from "@/utils/retryPromise";
+
+import { WebCam } from "@/components/WebCam/WebCam";
+import { Spinner } from "@/components/Spinner/Spinner";
+import { Flash } from "@/components/Flash/Flash";
+
 import styles from "@/styles/Home.module.scss";
-import { WebCam } from "@/components/WebCam";
-import { useState } from "react";
+
+enum Status {
+  WebCam = "webcam",
+  ScreenshotPreview = "screenshot-preview",
+  Generated = "generated",
+}
 
 export default function Home() {
   const [screenshot, setScreenshot] = useState<string>();
   const [generated, setGenerated] = useState<string>();
-  const [generating, setGenerating] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [status, setStatus] = useState<Status>(Status.WebCam);
+
+  const webCamHandleRef = useRef<{ takeScreenshot: Function }>(null);
+  const flashHandleRef = useRef<{ triggerFlash: Function }>(null);
 
   async function getGeneratedImage() {
-    if (generating) return;
+    if (isLoading || !screenshot) return;
 
-    setGenerating(true);
+    setIsLoading(true);
 
-    const response = await fetch("/api/img2img", {
-      method: "post",
-      body: JSON.stringify(screenshot),
-    }).then((data) => data.json());
-
-    setGenerating(false);
-    setGenerated(response.data.images[0]);
+    retryPromise(generateImage, screenshot)
+      .then(setGenerated)
+      .catch((error) =>
+        console.log("There was an error, please try again!", error)
+      )
+      .finally(() => setIsLoading(false));
   }
 
-  function clearScreenShot() {
-    if (generating) return;
-    setScreenshot(undefined);
+  async function takeScreenshot() {
+    flashHandleRef.current?.triggerFlash();
+    const webCamScreenshot = await webCamHandleRef.current?.takeScreenshot();
+
+    setScreenshot(webCamScreenshot);
   }
 
   function clearAll() {
-    if (generating) return;
-    clearScreenShot();
+    if (isLoading) return;
+    setScreenshot(undefined);
     setGenerated(undefined);
   }
+
+  function getUiButtons() {
+    switch (status) {
+      case Status.WebCam:
+        return <button onClick={takeScreenshot}>Take screenshot</button>;
+      case Status.ScreenshotPreview:
+        return (
+          <>
+            <button onClick={clearAll} disabled={isLoading}>
+              Retake
+            </button>
+
+            <button onClick={getGeneratedImage} disabled={isLoading}>
+              Generate
+            </button>
+          </>
+        );
+      case Status.Generated:
+        return (
+          <>
+            <button onClick={clearAll} disabled={isLoading}>
+              Take another screenshot
+            </button>
+
+            <button onClick={getGeneratedImage} disabled={isLoading}>
+              Retry with same image
+            </button>
+          </>
+        );
+    }
+  }
+
+  function getContent() {
+    switch (status) {
+      case Status.WebCam:
+        return <WebCam ref={webCamHandleRef} />;
+      case Status.ScreenshotPreview:
+        return (
+          <motion.img
+            layoutId={screenshot}
+            src={screenshot}
+            alt="screenshot"
+            className={styles.screenshot}
+          />
+        );
+      case Status.Generated:
+        return (
+          <img
+            className={styles.generated}
+            src={`data:image/webp;base64,${generated}`}
+            alt="generated"
+          />
+        );
+    }
+  }
+
+  useEffect(() => {
+    if (generated) setStatus(Status.Generated);
+    else if (screenshot) setStatus(Status.ScreenshotPreview);
+    else setStatus(Status.WebCam);
+  }, [screenshot, generated]);
 
   return (
     <>
@@ -42,32 +123,25 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        {!screenshot && !generated && <WebCam onScreenshot={setScreenshot} />}
-
-        {screenshot && !generated && (
-          <>
-            <img src={screenshot} alt="screenshot" />
-            <div className={styles.buttonsContainer}>
-              <button onClick={clearScreenShot} disabled={generating}>
-                Retake
-              </button>
-              <button onClick={getGeneratedImage} disabled={generating}>
-                Generate
-              </button>
-            </div>
-          </>
+      <main className={styles.home}>
+        {generated && screenshot && (
+          <motion.img
+            layoutId={screenshot}
+            src={screenshot}
+            alt="screenshot"
+            className={styles.preview}
+          />
         )}
 
-        {generated && (
-          <>
-            <img src={`data:image/png;base64,${generated}`} alt="generated" />
-            <div className={styles.buttonsContainer}>
-              <button onClick={getGeneratedImage} disabled={generating}>Retry</button>
-              <button onClick={clearAll} disabled={generating}>Clear</button>
-            </div>
-          </>
-        )}
+        <div className={styles.buttonsContainer}>{getUiButtons()}</div>
+
+        <div className={styles.content}>
+          {isLoading && <Spinner />}
+
+          <Flash ref={flashHandleRef} />
+
+          {getContent()}
+        </div>
       </main>
     </>
   );
