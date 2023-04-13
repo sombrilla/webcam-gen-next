@@ -63,8 +63,8 @@ async function generateComposition(settings: CompositionSettings) {
 
   const data = {
     init_images: [background],
-    denoising_strength: denoise,
-    cfg_scale: cfgScale,
+    denoising_strength: denoise || 1,
+    cfg_scale: cfgScale || 9,
     resize_mode: 1,
     prompt:
       "lvngvncnt, self-portrait, young, masterpiece, award winning cinematic photo, vast landscape backdrop, highly detailed",
@@ -78,7 +78,7 @@ async function generateComposition(settings: CompositionSettings) {
       {
         module: "hed",
         model: "control_hed-fp16 [13fee50b]",
-        weight: controlNetWeight,
+        weight: controlNetWeight || 1,
         width: 512,
         height: 512,
         guessmode: false,
