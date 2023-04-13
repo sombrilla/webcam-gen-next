@@ -40,9 +40,11 @@ export default function Home() {
       .finally(() => setIsLoading(false));
   }
 
-  function takeScreenshot() {
+  async function takeScreenshot() {
     flashHandleRef.current?.triggerFlash();
-    webCamHandleRef.current?.takeScreenshot();
+    const webCamScreenshot = await webCamHandleRef.current?.takeScreenshot();
+
+    setScreenshot(webCamScreenshot);
   }
 
   function clearAll() {
@@ -85,7 +87,7 @@ export default function Home() {
   function getContent() {
     switch (status) {
       case Status.WebCam:
-        return <WebCam ref={webCamHandleRef} onScreenshot={setScreenshot} />;
+        return <WebCam ref={webCamHandleRef} />;
       case Status.ScreenshotPreview:
         return (
           <motion.img

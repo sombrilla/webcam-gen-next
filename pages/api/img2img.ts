@@ -67,7 +67,7 @@ async function generateComposition(settings: CompositionSettings) {
     cfg_scale: cfgScale || 9,
     resize_mode: 1,
     prompt:
-      "lvngvncnt, self-portrait, young, masterpiece, award winning cinematic photo, vast landscape backdrop, highly detailed",
+      "lvngvncnt, (starry night), young, masterpiece, award winning cinematic photo, vast landscape backdrop, highly detailed",
     negative_prompt:
       "disfigured, deformed, old, sad, angry, blurry, realistic, hyperrealistic, 3d",
     steps: 25,
@@ -105,7 +105,7 @@ export default async function handler(
   const { image, denoise, cfgScale, controlNetWeight } = JSON.parse(req.body);
 
   // const test = await urlToBase64(
-  //   "https://img.buzzfeed.com/buzzfeed-static/static/2020-01/23/19/campaign_images/de71054fd8a6/you-can-only-be-a-woman-if-you-pass-this-test-2-2912-1579806237-1_dblbig.jpg"
+  //   "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/2560px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
   // );
 
   const subjectPromise = removeBackgroundFromScreenshot(image);

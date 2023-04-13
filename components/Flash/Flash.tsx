@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
+
 import styles from "./Flash.module.scss";
 
 const FLASH_DURATION = 300;

@@ -2,12 +2,8 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 
 import styles from "./WebCam.module.scss";
 
-interface WebCamProps {
-  onScreenshot: (image: string) => void;
-}
-
-export const WebCam = forwardRef<{ takeScreenshot: Function }, WebCamProps>(
-  ({ onScreenshot }, ref) => {
+export const WebCam = forwardRef<{ takeScreenshot: Function }, {}>(
+  ({}, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     async function takeScreenshot() {
@@ -25,7 +21,7 @@ export const WebCam = forwardRef<{ takeScreenshot: Function }, WebCamProps>(
 
       const dataURI = canvas.toDataURL("image/png");
 
-      onScreenshot(dataURI);
+      return dataURI;
     }
 
     useImperativeHandle(ref, () => {
