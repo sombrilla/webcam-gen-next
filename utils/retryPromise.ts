@@ -1,11 +1,11 @@
 export function retryPromise<T, A>(
-  promiseFunc: (arg: A) => Promise<T>,
-  arg: A,
+  promiseFunc: (args: A) => Promise<T>,
+  args: A,
   retryCount: number = 2
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const tryOperation = () => {
-      promiseFunc(arg)
+      promiseFunc(args)
         .then(resolve)
         .catch((error) => {
           if (retryCount <= 0) {

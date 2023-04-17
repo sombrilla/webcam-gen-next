@@ -17,6 +17,18 @@ enum Status {
   Generated = "generated",
 }
 
+enum Background {
+  StarryNight = "starry-night",
+  SelfPortrait = "self-portrait",
+  Bedroom = "bedroom",
+}
+
+const backgroundLabaels = {
+  [Background.StarryNight]: "Starry Night",
+  [Background.SelfPortrait]: "Self Portrait",
+  [Background.Bedroom]: "Bedroom",
+};
+
 export default function Home() {
   const [screenshot, setScreenshot] = useState<string>();
   const [generated, setGenerated] = useState<string>();
@@ -26,13 +38,21 @@ export default function Home() {
 
   const webCamHandleRef = useRef<{ takeScreenshot: Function }>(null);
   const flashHandleRef = useRef<{ triggerFlash: Function }>(null);
+  const backgroundFormRef = useRef<HTMLFormElement>(null);
 
   async function getGeneratedImage() {
     if (isLoading || !screenshot) return;
 
     setIsLoading(true);
 
-    retryPromise(generateImage, screenshot)
+    const formValues = new FormData(backgroundFormRef.current || undefined);
+    const background = (formValues.get("background") as string) || undefined;
+
+    retryPromise<string, { subject: string; background?: string }>(
+      generateImage,
+      { subject: screenshot, background },
+      1
+    )
       .then(setGenerated)
       .catch((error) =>
         console.log("There was an error, please try again!", error)
@@ -134,6 +154,21 @@ export default function Home() {
         )}
 
         <div className={styles.buttonsContainer}>{getUiButtons()}</div>
+
+        <form
+          ref={backgroundFormRef}
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <input name="background" type="radio" id="default" defaultChecked />
+          <label htmlFor="default">Surprise me</label>
+
+          {Object.entries(backgroundLabaels).map(([key, value]) => (
+            <>
+              <input name="background" type="radio" id={key} value={key} />
+              <label htmlFor={key}>{value}</label>
+            </>
+          ))}
+        </form>
 
         <div className={styles.content}>
           {isLoading && <Spinner />}
