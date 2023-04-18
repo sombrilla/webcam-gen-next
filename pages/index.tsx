@@ -42,9 +42,12 @@ export default function Home() {
 
   async function takeScreenshot() {
     flashHandleRef.current?.triggerFlash();
-    const webCamScreenshot = await webCamHandleRef.current?.takeScreenshot();
 
-    setScreenshot(webCamScreenshot);
+    setTimeout(async () => {
+      const webCamScreenshot = await webCamHandleRef.current?.takeScreenshot();
+
+      setScreenshot(webCamScreenshot);
+    }, 150);
   }
 
   function clearAll() {

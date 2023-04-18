@@ -2,23 +2,22 @@ import { forwardRef, useImperativeHandle, useRef } from "react";
 
 import styles from "./Flash.module.scss";
 
-const FLASH_DURATION = 300;
+const FLASH_DURATION = 450;
 
 export const Flash = forwardRef<{ triggerFlash: Function }, {}>(({}, ref) => {
   const flashRef = useRef<HTMLDivElement>(null);
 
   function triggerFlash() {
-    new Promise((resolve) => {
-      flashRef.current?.classList.add("flash");
+    if (!flashRef.current) return;
 
-      setTimeout(() => {
-        flashRef.current?.classList.remove("flash");
-
-        setTimeout(() => {
-          resolve(null);
-        }, FLASH_DURATION);
-      }, FLASH_DURATION);
-    });
+    flashRef.current.animate(
+      [{ opacity: 1 }, { opacity: 1, offset: 0.7 }, { opacity: 0 }],
+      {
+        duration: FLASH_DURATION,
+        iterations: 1,
+        easing: "ease-out",
+      }
+    );
   }
 
   useImperativeHandle(ref, () => ({ triggerFlash }));

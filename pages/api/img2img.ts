@@ -41,8 +41,13 @@ async function createBackground() {
     {
       ...sharedRequestData,
       body: JSON.stringify({
-        prompt: "lvngvncnt, a colorful landscape by van gogh, highly detailed",
-        steps: 5,
+        prompt:
+          "lvngvncnt, vivid colors, scenery, oil, impasto, highly detailed",
+        negative_prompt: "portrait, person, yellow",
+        cfg_scale: 7.5,
+        steps: 15,
+        sampler_index: "Euler",
+        restore_faces: false,
       }),
     }
   ).then((response) => response.json());
@@ -64,31 +69,46 @@ async function generateComposition(settings: CompositionSettings) {
   const data = {
     init_images: [background],
     denoising_strength: denoise || 1,
-    cfg_scale: cfgScale || 9,
+    cfg_scale: cfgScale || 7.5,
     resize_mode: 1,
     prompt:
-      "lvngvncnt, (starry night), young, masterpiece, award winning cinematic photo, vast landscape backdrop, highly detailed",
+      "lvngvncnt, beautiful scenery behind, vivid colors, portrait, masterpiece, oil, impasto, highly detailed",
     negative_prompt:
-      "disfigured, deformed, old, sad, angry, blurry, realistic, hyperrealistic, 3d",
+      "disfigured, deformed, black person, yellow, gradient, white hair, blurry, realistic, hyperrealistic, 3d",
     steps: 25,
+    sampler_index: "Euler",
     width: 512,
     height: 512,
     restore_faces: true,
-    controlnet_units: [
-      {
-        module: "hed",
-        model: "control_hed-fp16 [13fee50b]",
-        weight: controlNetWeight || 1,
-        width: 512,
-        height: 512,
-        guessmode: false,
-        input_image: subject,
+    alwayson_scripts: {
+      controlnet: {
+        args: [
+          {
+            module: "clip_vision",
+            model: "t2iadapter_style_sd14v1 [202e85cc]",
+            weight: controlNetWeight || 0.15,
+            guessmode: false,
+          },
+          {
+            module: "hed",
+            model: "control_hed-fp16 [13fee50b]",
+            weight: controlNetWeight || 0.3,
+            guessmode: false,
+          },
+          {
+            module: "hed",
+            model: "control_hed-fp16 [13fee50b]",
+            weight: controlNetWeight || 1,
+            guessmode: false,
+            input_image: subject,
+          },
+        ],
       },
-    ],
+    },
   };
 
   const composition = await fetch(
-    `${process.env.NEXT_BASE_API}/controlnet/img2img`,
+    `${process.env.NEXT_BASE_API}/sdapi/v1/img2img`,
     {
       ...sharedRequestData,
       body: JSON.stringify(data),
@@ -108,12 +128,9 @@ export default async function handler(
   //   "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/2560px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
   // );
 
-  const subjectPromise = removeBackgroundFromScreenshot(image);
-  const backgroundPromise = createBackground();
-
   const [subject, background] = await Promise.all([
-    subjectPromise,
-    backgroundPromise,
+    removeBackgroundFromScreenshot(image),
+    createBackground(),
   ]);
 
   const composition = await generateComposition({
